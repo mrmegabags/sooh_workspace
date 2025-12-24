@@ -13,14 +13,36 @@ defmodule SoohWorkspaceWeb.Router do
     plug :fetch_current_scope_for_user
   end
 
+  pipeline :public do
+    plug :browser
+  end
+
+  pipeline :authenticated do
+    plug :browser
+    plug :require_authenticated_user
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
 
   scope "/", SoohWorkspaceWeb do
-    pipe_through :browser
+    pipe_through :public
 
-    get "/", PageController, :home
+    # Marketing
+    get "/", MarketingController, :home
+    get "/product", MarketingController, :product
+    get "/pricing", MarketingController, :pricing
+    get "/about", MarketingController, :about
+    get "/docs", MarketingController, :docs
+    get "/privacy", MarketingController, :privacy
+    get "/support", MarketingController, :support
+
+    # Snapshots (public read-only)
+    live "/s/:token", SnapshotLive.Show, :show
+
+    # Demo sign-in
+    post "/demo", DemoController, :create
   end
 
   # Other scopes may use custom stacks.
@@ -71,5 +93,25 @@ defmodule SoohWorkspaceWeb.Router do
 
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
+  end
+
+  scope "/", SoohWorkspaceWeb do
+    pipe_through :authenticated
+
+    live_session :app,
+      on_mount: [{SoohWorkspaceWeb.UserAuth, :ensure_authenticated}] do
+      live "/app", DashboardLive, :index
+      live "/app/projects", ProjectsLive.Index, :index
+      live "/app/projects/:id", ProjectsLive.Show, :show
+
+      live "/app/tasks", TasksLive.Index, :index
+      live "/app/tasks/:id", TasksLive.Show, :show
+
+      live "/app/contributors", ContributorsLive.Index, :index
+      live "/app/settings", SettingsLive, :index
+
+      # snapshot publish wizard (authenticated)
+      live "/app/snapshots/new", SnapshotLive.New, :new
+    end
   end
 end
