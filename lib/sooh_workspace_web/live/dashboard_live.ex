@@ -84,6 +84,39 @@ defmodule SoohWorkspaceWeb.DashboardLive do
   end
 
   @impl true
+def handle_event("fix_issue", %{"action" => action} = p, socket) do
+  project_id = socket.assigns.current_project.id
+
+  case action do
+    "assign_owner" ->
+      {:noreply,
+       push_navigate(socket,
+         to:
+           ~p"/app/projects/#{project_id}?fix=assign_owner&milestone_id=#{p["milestone_id"]}"
+       )}
+
+    "edit_task_done_means" ->
+      {:noreply,
+       push_navigate(socket,
+         to: ~p"/app/tasks/#{p["task_id"]}?fix=done_means"
+       )}
+
+    "link_decision" ->
+      {:noreply,
+       push_navigate(socket,
+         to:
+           ~p"/app/projects/#{project_id}?fix=link_decision&decision_id=#{p["decision_id"]}"
+       )}
+
+    _ ->
+      {:noreply, socket}
+  end
+end
+
+
+
+
+  @impl true
   def render(assigns) do
     p = assigns.current_project
     milestones = p.milestones |> Enum.filter(&(&1.phase == assigns.phase_tab))
@@ -454,14 +487,30 @@ defmodule SoohWorkspaceWeb.DashboardLive do
           </div>
           <.subtle class="mt-2"><%= @check.summary %></.subtle>
 
-          <div class="mt-4 space-y-2">
-            <%= for issue <- Enum.take(@check.issues, 4) do %>
-              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <div class="text-sm font-medium"><%= issue.title %></div>
-                <div class="mt-1 text-sm text-slate-600"><%= issue.detail %></div>
-              </div>
-            <% end %>
+        
+                <div class="mt-4 space-y-2">
+      <%= for issue <- Enum.take(@check.issues, 4) do %>
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="text-sm font-medium"><%= issue.title %></div>
+              <div class="mt-1 text-sm text-slate-600"><%= issue.detail %></div>
+            </div>
+            <button class="shrink-0 rounded-2xl bg-slate-900 text-white px-3 py-1.5 text-xs hover:bg-slate-800
+                           focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    phx-click="fix_issue"
+                    phx-value-action={issue.fix.action}
+                    phx-value-milestone_id={issue.fix[:milestone_id]}
+                    phx-value-task_id={issue.fix[:task_id]}
+                    phx-value-decision_id={issue.fix[:decision_id]}>
+              Fix
+            </button>
           </div>
+        </div>
+      <% end %>
+    </div>
+
+
 
           <button class="mt-4 w-full rounded-2xl bg-slate-900 text-white px-3 py-2 text-sm hover:bg-slate-800"
                   phx-click="run_sooh_check">

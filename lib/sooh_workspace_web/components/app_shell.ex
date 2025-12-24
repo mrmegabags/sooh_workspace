@@ -2,6 +2,8 @@ defmodule SoohWorkspaceWeb.AppShell do
   use SoohWorkspaceWeb, :html
   import SoohWorkspaceWeb.UIComponents
 
+  attr :search_event, :string, default: nil
+  attr :search_submit, :string, default: nil
   attr :current_user, :any, required: true
   attr :current_project, :any, required: true
   attr :active, :string, required: true
@@ -37,20 +39,26 @@ defmodule SoohWorkspaceWeb.AppShell do
           </div>
 
           <div class="flex-1"></div>
-
-          <form class="hidden md:flex items-center gap-2" role="search" aria-label="Search">
+          <form
+            class="hidden md:flex items-center gap-2"
+            role="search"
+            aria-label="Search"
+            phx-change={@search_event}
+            phx-submit={@search_submit}
+          >
             <input
               name="q"
               value={@search}
               placeholder="Search projects, tasks, people…"
               class="w-80 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm
-                          focus:outline-none focus:ring-2 focus:ring-slate-400"
+                focus:outline-none focus:ring-2 focus:ring-slate-400"
               phx-debounce="300"
             />
+            <button type="submit" class="hidden"></button>
             <button
               type="button"
               class="hidden lg:inline-flex rounded-2xl border border-slate-200 px-3 py-2 text-sm
-                    hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
+          hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
               aria-label="New"
             >
               New

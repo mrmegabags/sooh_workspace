@@ -23,16 +23,13 @@ defmodule SoohWorkspace.Workspace do
   def get_project!(id), do: Repo.get!(Project, id)
 
   def get_project_with_details!(id) do
-    project =
-      Project
-      |> Repo.get!(id)
-      |> Repo.preload(
-        contributors: [],
-        milestones: [:tasks],
-        decisions: []
-      )
-
-    project
+    Project
+    |> Repo.get!(id)
+    |> Repo.preload(
+      contributors: [],
+      milestones: [:tasks, :owner],
+      decisions: []
+    )
   end
 
   def create_project(attrs), do: %Project{} |> Project.changeset(attrs) |> Repo.insert()
@@ -202,4 +199,11 @@ defmodule SoohWorkspace.Workspace do
   def verify_snapshot_password(%Snapshot{password_hash: hash}, pw) when is_binary(pw) do
     if Bcrypt.verify_pass(pw, hash), do: {:ok, :ok}, else: {:error, :invalid_password}
   end
+
+  # --- Changesets for LiveView forms ---
+  def change_project(%Project{} = p, attrs \\ %{}), do: Project.changeset(p, attrs)
+  def change_contributor(%Contributor{} = c, attrs \\ %{}), do: Contributor.changeset(c, attrs)
+  def change_milestone(%Milestone{} = m, attrs \\ %{}), do: Milestone.changeset(m, attrs)
+  def change_task(%Task{} = t, attrs \\ %{}), do: Task.changeset(t, attrs)
+  def change_decision(%Decision{} = d, attrs \\ %{}), do: Decision.changeset(d, attrs)
 end
